@@ -17,8 +17,14 @@ add_library(TokenSpecLib
         Lexer/TokenSpecification/ITokenSpecReader.h
 )
 
+add_library(RegexLib
+        Lexer/Regex/RegexParser.cpp
+        Lexer/Regex/RegexParser.h
+        Lexer/Regex/RegexAST.h
+)
+
 add_executable(Analiz main.cpp)
-target_link_libraries(Analiz PRIVATE PreprocessorLib TokenSpecLib)
+target_link_libraries(Analiz PRIVATE PreprocessorLib TokenSpecLib RegexLib)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -35,7 +41,6 @@ add_executable(TokenSpecReaderTests
         test/Lexer/TokenSpecification/TokenSpecReaderTest.h
 )
 target_link_libraries(TokenSpecReaderTests PRIVATE TokenSpecLib PreprocessorLib gtest_main)
-
 include(GoogleTest)
 gtest_discover_tests(TokenSpecReaderTests)
 
@@ -44,5 +49,10 @@ add_executable(PreprocessorTests
         test/Preprocessor/PreprocessorTest.h
 )
 target_link_libraries(PreprocessorTests PRIVATE PreprocessorLib gtest_main)
-
 gtest_discover_tests(PreprocessorTests)
+
+add_executable(RegexParserTests
+        test/Lexer/Regex/RegexParserTest.cpp
+)
+target_link_libraries(RegexParserTests PRIVATE RegexLib gtest_main)
+gtest_discover_tests(RegexParserTests)
