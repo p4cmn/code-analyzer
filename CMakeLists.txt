@@ -45,9 +45,31 @@ add_library(ReaderLib
         Lexer/Reader/IReader.h
 )
 
+# Библиотека для таблицы символов
+add_library(SymbolTableLib
+        SymbolTable/SymbolTable.cpp
+        SymbolTable/SymbolTable.h
+        SymbolTable/ISymbolTable.h
+)
+
+# Новая библиотека для DfaLexer
+add_library(DfaLexerLib
+        Lexer/DfaLexer.cpp
+        Lexer/DfaLexer.h
+)
+
 # Основное приложение – не содержит тестовых файлов!
 add_executable(Analiz main.cpp)
-target_link_libraries(Analiz PRIVATE PreprocessorLib TokenSpecLib RegexLib NFALib DFALib ReaderLib)
+target_link_libraries(Analiz PRIVATE
+        PreprocessorLib
+        TokenSpecLib
+        RegexLib
+        NFALib
+        DFALib
+        ReaderLib
+        SymbolTableLib
+        DfaLexerLib
+)
 
 # Подключаем GoogleTest через FetchContent
 include(FetchContent)
@@ -60,16 +82,30 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-# Тесты для TokenSpecReader
+# Тесты для Token (файл test/Lexer/Token/TokenTest.cpp)
+add_executable(TokenTests
+        test/Lexer/Token/TokenTest.cpp
+)
+target_link_libraries(TokenTests PRIVATE gtest_main)
+include(GoogleTest)
+gtest_discover_tests(TokenTests)
+
+# Тесты для SymbolTable (файл test/SymbolTable/SymbolTableTest.cpp)
+add_executable(SymbolTableTests
+        test/SymbolTable/SymbolTableTest.cpp
+)
+target_link_libraries(SymbolTableTests PRIVATE SymbolTableLib gtest_main)
+gtest_discover_tests(SymbolTableTests)
+
+# Тесты для TokenSpecReader (файл test/Lexer/TokenSpecification/TokenSpecReaderTest.cpp)
 add_executable(TokenSpecReaderTests
         test/Lexer/TokenSpecification/TokenSpecReaderTest.cpp
         test/Lexer/TokenSpecification/TokenSpecReaderTest.h
 )
 target_link_libraries(TokenSpecReaderTests PRIVATE TokenSpecLib PreprocessorLib gtest_main)
-include(GoogleTest)
 gtest_discover_tests(TokenSpecReaderTests)
 
-# Тесты для Preprocessor
+# Тесты для Preprocessor (файл test/Preprocessor/PreprocessorTest.cpp)
 add_executable(PreprocessorTests
         test/Preprocessor/PreprocessorTest.cpp
         test/Preprocessor/PreprocessorTest.h
@@ -77,30 +113,47 @@ add_executable(PreprocessorTests
 target_link_libraries(PreprocessorTests PRIVATE PreprocessorLib gtest_main)
 gtest_discover_tests(PreprocessorTests)
 
-# Тесты для RegexParser
+# Тесты для RegexParser (файл test/Lexer/Regex/RegexParserTest.cpp)
 add_executable(RegexParserTests
         test/Lexer/Regex/RegexParserTest.cpp
 )
 target_link_libraries(RegexParserTests PRIVATE RegexLib gtest_main)
 gtest_discover_tests(RegexParserTests)
 
-# Тесты для NFABuilder
+# Тесты для NFABuilder (файл test/Lexer/NFA/NFABuilderTest.cpp)
 add_executable(NFABuilderTests
         test/Lexer/NFA/NFABuilderTest.cpp
 )
 target_link_libraries(NFABuilderTests PRIVATE NFALib RegexLib gtest_main)
 gtest_discover_tests(NFABuilderTests)
 
-# Тесты для DFA
+# Тесты для DFA (файл test/Lexer/DFA/DFATest.cpp)
 add_executable(DFATests
         test/Lexer/DFA/DFATest.cpp
 )
 target_link_libraries(DFATests PRIVATE DFALib NFALib RegexLib gtest_main)
 gtest_discover_tests(DFATests)
 
-# Тесты для TwoBufferReader
+# Тесты для TwoBufferReader (файл test/Lexer/Reader/TwoBufferReaderTest.cpp)
 add_executable(TwoBufferReaderTests
         test/Lexer/Reader/TwoBufferReaderTest.cpp
 )
 target_link_libraries(TwoBufferReaderTests PRIVATE ReaderLib gtest_main)
 gtest_discover_tests(TwoBufferReaderTests)
+
+# Тесты для DfaLexer (файл test/Lexer/DfaLexerTest.cpp)
+add_executable(DfaLexerTests
+        test/Lexer/DfaLexerTest.cpp
+)
+target_link_libraries(DfaLexerTests PRIVATE
+        PreprocessorLib
+        TokenSpecLib
+        RegexLib
+        NFALib
+        DFALib
+        ReaderLib
+        SymbolTableLib
+        DfaLexerLib
+        gtest_main
+)
+gtest_discover_tests(DfaLexerTests)
