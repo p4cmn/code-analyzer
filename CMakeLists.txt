@@ -38,9 +38,16 @@ add_library(DFALib
         Lexer/DFA/DFA.h
 )
 
+# Библиотека для модуля чтения (TwoBufferReader)
+add_library(ReaderLib
+        Lexer/Reader/TwoBufferReader.cpp
+        Lexer/Reader/TwoBufferReader.h
+        Lexer/Reader/IReader.h
+)
+
 # Основное приложение – не содержит тестовых файлов!
 add_executable(Analiz main.cpp)
-target_link_libraries(Analiz PRIVATE PreprocessorLib TokenSpecLib RegexLib NFALib DFALib)
+target_link_libraries(Analiz PRIVATE PreprocessorLib TokenSpecLib RegexLib NFALib DFALib ReaderLib)
 
 # Подключаем GoogleTest через FetchContent
 include(FetchContent)
@@ -84,9 +91,16 @@ add_executable(NFABuilderTests
 target_link_libraries(NFABuilderTests PRIVATE NFALib RegexLib gtest_main)
 gtest_discover_tests(NFABuilderTests)
 
-# Тесты для DFA (DFAConstructionTest)
+# Тесты для DFA
 add_executable(DFATests
         test/Lexer/DFA/DFATest.cpp
 )
 target_link_libraries(DFATests PRIVATE DFALib NFALib RegexLib gtest_main)
 gtest_discover_tests(DFATests)
+
+# Тесты для TwoBufferReader
+add_executable(TwoBufferReaderTests
+        test/Lexer/Reader/TwoBufferReaderTest.cpp
+)
+target_link_libraries(TwoBufferReaderTests PRIVATE ReaderLib gtest_main)
+gtest_discover_tests(TwoBufferReaderTests)

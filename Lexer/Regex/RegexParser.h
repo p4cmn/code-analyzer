@@ -20,7 +20,9 @@ private:
     std::shared_ptr<RegexAST> parseCat();
     std::shared_ptr<RegexAST> parseRep();
     std::shared_ptr<RegexAST> parseBase();
-    std::shared_ptr<RegexAST> makeNode(RegexNodeType type, std::shared_ptr<RegexAST> left = nullptr, std::shared_ptr<RegexAST> right = nullptr);
+    std::shared_ptr<RegexAST> makeNode(RegexNodeType type,
+                                       std::shared_ptr<RegexAST> left = nullptr,
+                                       std::shared_ptr<RegexAST> right = nullptr);
     std::string parseCharClass();
     char parseEscaped();
 };
