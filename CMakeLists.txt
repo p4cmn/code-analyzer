@@ -10,9 +10,15 @@ add_library(PreprocessorLib
         Preprocessor/IPreprocessor.h
 )
 
-add_executable(Analiz main.cpp
-        Lexer/TokenSpecification/TokenSpec.h)
-target_link_libraries(Analiz PRIVATE PreprocessorLib)
+add_library(TokenSpecLib
+        Lexer/TokenSpecification/TokenSpecReader.cpp
+        Lexer/TokenSpecification/TokenSpecReader.h
+        Lexer/TokenSpecification/TokenSpec.h
+        Lexer/TokenSpecification/ITokenSpecReader.h
+)
+
+add_executable(Analiz main.cpp)
+target_link_libraries(Analiz PRIVATE PreprocessorLib TokenSpecLib)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -24,11 +30,19 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
+add_executable(TokenSpecReaderTests
+        test/Lexer/TokenSpecification/TokenSpecReaderTest.cpp
+        test/Lexer/TokenSpecification/TokenSpecReaderTest.h
+)
+target_link_libraries(TokenSpecReaderTests PRIVATE TokenSpecLib PreprocessorLib gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(TokenSpecReaderTests)
+
 add_executable(PreprocessorTests
         test/Preprocessor/PreprocessorTest.cpp
         test/Preprocessor/PreprocessorTest.h
 )
 target_link_libraries(PreprocessorTests PRIVATE PreprocessorLib gtest_main)
 
-include(GoogleTest)
 gtest_discover_tests(PreprocessorTests)
