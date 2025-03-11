@@ -65,7 +65,6 @@ std::string RegexParser::parseCharClass() {
   return result;
 }
 
-// Базовое правило: обрабатываем группы, классы символов, escape-последовательности и литералы.
 std::shared_ptr<RegexAST> RegexParser::parseBase() {
   char c = peek();
   if (c == '(') {
@@ -106,7 +105,7 @@ std::shared_ptr<RegexAST> RegexParser::parseRep() {
         node = makeNode(RegexNodeType::Star, node);
       } else if (c == '+') {
         node = makeNode(RegexNodeType::Plus, node);
-      } else if (c == '?') {
+      } else {
         node = makeNode(RegexNodeType::Question, node);
       }
     } else {

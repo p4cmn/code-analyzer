@@ -11,9 +11,9 @@ public:
 private:
     std::string pattern_;
     size_t pos_;
-    char peek() const;
+    [[nodiscard]] char peek() const;
     char get();
-    bool eof() const;
+    [[nodiscard]] bool eof() const;
     bool match(char c);
 
     std::shared_ptr<RegexAST> parseAlt();

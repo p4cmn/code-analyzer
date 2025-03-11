@@ -15,7 +15,7 @@ static inline std::string trim(const std::string& s) {
   do {
     --end;
   } while (std::distance(start, end) > 0 && std::isspace(*end));
-  return std::string(start, end + 1);
+  return {start, end + 1};
 }
 
 std::vector<TokenSpec> TokenSpecReader::readTokenSpecs(const std::string& filePath) {

@@ -6,8 +6,8 @@ static std::vector<NFAState> copyStatesWithOffset(const std::vector<NFAState>& s
   copied.resize(states.size());
   for (size_t i = 0; i < states.size(); i++) {
     copied[i] = states[i];
-    for (int j = 0; j < 256; j++) {
-      for (int &target : copied[i].transitions[j]) {
+    for (auto & transition : copied[i].transitions) {
+      for (int &target : transition) {
         target += offset;
       }
     }
@@ -114,6 +114,8 @@ static NFA buildNFAFromAST(const std::shared_ptr<RegexAST>& ast) {
       if (ast->charClass.empty())
         throw std::runtime_error("Пустой класс символов");
       NFA result = buildBasicNFA(ast->charClass[0]);
+      //TODO в общем тут для [a-z] строится тупо NFA для a,-,z а потом альтернатива.
+      //TODO Нужно чтобы была альтернатива для a b c d e f ... z
       for (size_t i = 1; i < ast->charClass.size(); ++i) {
         NFA temp = buildBasicNFA(ast->charClass[i]);
         result = alternateNFA(result, temp);

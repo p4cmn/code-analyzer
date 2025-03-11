@@ -10,16 +10,24 @@ DfaLexer::DfaLexer(const DFA &dfa,
 {}
 
 TokenType DfaLexer::mapTokenNameToType(const std::string &name) {
-  // Здесь вы можете расширить логику маппинга,
-  // сейчас, для примера, сделаны простые соответствия:
-  if (name == "IDENT")       return TokenType::IDENTIFIER;
-  if (name == "NUMBER")      return TokenType::NUMBER;
-  if (name == "WHITESPACE")  return TokenType::UNKNOWN; // игнорим, но пусть будет UNKNOWN
-  if (name == "KEYWORD")     return TokenType::KEYWORD;
-  if (name == "OPERATOR")    return TokenType::OPERATOR;
-  if (name == "SEPARATOR")   return TokenType::SEPARATOR;
-  if (name == "STRING")      return TokenType::STRING_LITERAL;
-  // ... и т.д. на ваше усмотрение
+  if (name == "KEYWORD")   return TokenType::KEYWORD;
+  if (name == "IDENT")     return TokenType::IDENTIFIER;
+  if (name == "NUMBER")    return TokenType::NUMBER;
+  if (name == "STRING")    return TokenType::STRING_LITERAL;
+  if (name == "LBRACE")    return TokenType::SEPARATOR;    // или сделайте отдельный TokenType для '{'
+  if (name == "RBRACE")    return TokenType::SEPARATOR;    // или свой тип
+  if (name == "LPAREN")    return TokenType::SEPARATOR;
+  if (name == "RPAREN")    return TokenType::SEPARATOR;
+  if (name == "SEMICOLON") return TokenType::SEPARATOR;
+  if (name == "COMMA")     return TokenType::SEPARATOR;
+  if (name == "OP")        return TokenType::OPERATOR;
+
+  // Если правило называется WHITESPACE с ignore=true,
+  // мы его пропустим (не вернём наружу), но если дошли сюда –
+  // пусть будет UNKNOWN (или можно вернуть SEPARATOR).
+  if (name == "WHITESPACE") return TokenType::UNKNOWN;
+
+  // По умолчанию:
   return TokenType::UNKNOWN;
 }
 
@@ -48,7 +56,6 @@ Token DfaLexer::getNextToken() {
     }
     int nextState = m_dfa.states[currentState].transitions[(unsigned char)c];
     if (nextState == -1) {
-      // Нет перехода — выходим из цикла
       break;
     }
     lexeme.push_back(m_reader.getChar());
@@ -87,6 +94,5 @@ Token DfaLexer::getNextToken() {
   if (tok.type == TokenType::IDENTIFIER && m_symbolTable) {
     tok.symbolId = m_symbolTable->addSymbol(lexeme);
   }
-
   return tok;
 }
