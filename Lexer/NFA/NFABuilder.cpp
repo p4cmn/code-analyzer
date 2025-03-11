@@ -1,6 +1,28 @@
 #include "NFABuilder.h"
 #include <stdexcept>
 
+std::string parseCharClass(const std::string &charClassExpr) {
+  std::string expanded;
+  size_t i = 0;
+  while (i < charClassExpr.size()) {
+    if (i + 2 < charClassExpr.size() && charClassExpr[i + 1] == '-') {
+      char start = charClassExpr[i];
+      char end = charClassExpr[i + 2];
+      if (start >= end) {
+        throw std::runtime_error("Некорректный диапазон в классе символов: " + charClassExpr);
+      }
+      for (char c = start; c <= end; c++) {
+        expanded += c;
+      }
+      i += 3;
+    } else {
+      expanded += charClassExpr[i];
+      i++;
+    }
+  }
+  return expanded;
+}
+
 static std::vector<NFAState> copyStatesWithOffset(const std::vector<NFAState>& states, int offset) {
   std::vector<NFAState> copied;
   copied.resize(states.size());
@@ -111,13 +133,13 @@ static NFA buildNFAFromAST(const std::shared_ptr<RegexAST>& ast) {
     case RegexNodeType::Epsilon:
       return buildBasicNFA('\0');
     case RegexNodeType::CharClass: {
-      if (ast->charClass.empty())
+      if (ast->charClass.empty()) {
         throw std::runtime_error("Пустой класс символов");
-      NFA result = buildBasicNFA(ast->charClass[0]);
-      //TODO в общем тут для [a-z] строится тупо NFA для a,-,z а потом альтернатива.
-      //TODO Нужно чтобы была альтернатива для a b c d e f ... z
-      for (size_t i = 1; i < ast->charClass.size(); ++i) {
-        NFA temp = buildBasicNFA(ast->charClass[i]);
+      }
+      std::string expandedClass = parseCharClass(ast->charClass);
+      NFA result = buildBasicNFA(expandedClass[0]);
+      for (size_t i = 1; i < expandedClass.size(); ++i) {
+        NFA temp = buildBasicNFA(expandedClass[i]);
         result = alternateNFA(result, temp);
       }
       return result;

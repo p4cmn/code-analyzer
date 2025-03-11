@@ -1,8 +1,8 @@
 #pragma once
+#include "../Regex/RegexAST.h"
 #include <memory>
 #include <vector>
 #include <string>
-#include "../Regex/RegexAST.h"
 
 struct NFAState {
     bool isAccept = false;
@@ -23,3 +23,5 @@ public:
     static NFA buildCombinedNFA(const std::vector<std::shared_ptr<RegexAST>>& asts,
                                 const std::vector<int>& tokenIndices);
 };
+
+std::string parseCharClass(const std::string &charClassExpr);
