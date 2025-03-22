@@ -90,7 +90,6 @@ target_link_libraries(TokenTests PRIVATE gtest_main)
 include(GoogleTest)
 gtest_discover_tests(TokenTests)
 
-# Тесты для SymbolTable (файл test/SymbolTable/SymbolTableTest.cpp)
 add_executable(SymbolTableTests
         test/SymbolTable/SymbolTableTest.cpp
 )
@@ -100,7 +99,6 @@ gtest_discover_tests(SymbolTableTests)
 # Тесты для TokenSpecReader (файл test/Lexer/TokenSpecification/TokenSpecReaderTest.cpp)
 add_executable(TokenSpecReaderTests
         test/Lexer/TokenSpecification/TokenSpecReaderTest.cpp
-        test/Lexer/TokenSpecification/TokenSpecReaderTest.h
 )
 target_link_libraries(TokenSpecReaderTests PRIVATE TokenSpecLib PreprocessorLib gtest_main)
 gtest_discover_tests(TokenSpecReaderTests)
