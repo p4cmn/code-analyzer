@@ -1,20 +1,23 @@
-// RegexParser.cpp
 #include "RegexParser.h"
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 
 RegexParser::RegexParser(const std::string& pattern)
-        : pattern_(pattern), pos_(0) {}
+        : pattern_(pattern), pos_(0)
+{}
 
 char RegexParser::peek() const {
-  if (pos_ < pattern_.size())
+  if (pos_ < pattern_.size()) {
     return pattern_[pos_];
+  }
   return '\0';
 }
 
 char RegexParser::get() {
-  if (pos_ < pattern_.size())
+  if (pos_ < pattern_.size()) {
     return pattern_[pos_++];
+  }
   return '\0';
 }
 
@@ -40,29 +43,47 @@ std::shared_ptr<RegexAST> RegexParser::makeNode(RegexNodeType type,
 }
 
 char RegexParser::parseEscaped() {
-  if (eof())
+  if (eof()) {
     throw std::runtime_error("Неожиданный конец шаблона после символа '\\'");
+  }
   char c = get();
-  switch(c) {
-    case 'n': return '\n';
-    case 'r': return '\r';
-    case 't': return '\t';
-    default: return c;
+  switch (c) {
+    case 'n':  return '\n';
+    case 'r':  return '\r';
+    case 't':  return '\t';
+    case '\\': return '\\';
+    case '|':  return '|';
+    case '*':  return '*';
+    case '+':  return '+';
+    case '?':  return '?';
+    case '(':  return '(';
+    case ')':  return ')';
+    case '[':  return '[';
+    case ']':  return ']';
+    default:
+      return c;
   }
 }
 
 std::string RegexParser::parseCharClass() {
-  std::string result;
-  while (!eof() && peek() != ']') {
-    char c = get();
-    if (c == '\\') {
-      c = parseEscaped();
+  std::ostringstream oss;
+  while (!eof()) {
+    if (peek() == ']') {
+      get();
+      return oss.str();
     }
-    result.push_back(c);
+    if (peek() == '\\') {
+      get();
+      if (eof()) {
+        throw std::runtime_error("Ожидалась closing ']' для класса, но файл закончился");
+      }
+      char esc = parseEscaped();
+      oss << esc;
+    } else {
+      oss << get();
+    }
   }
-  if (!match(']'))
-    throw std::runtime_error("Ожидалась закрывающая ']' для класса символов");
-  return result;
+  throw std::runtime_error("Ожидалась закрывающая ']' для класса символов, но не найдена");
 }
 
 std::shared_ptr<RegexAST> RegexParser::parseBase() {
@@ -70,8 +91,9 @@ std::shared_ptr<RegexAST> RegexParser::parseBase() {
   if (c == '(') {
     get();
     auto node = parseAlt();
-    if (!match(')'))
+    if (!match(')')) {
       throw std::runtime_error("Ожидалась ')'");
+    }
     return node;
   } else if (c == '[') {
     get();
@@ -88,7 +110,7 @@ std::shared_ptr<RegexAST> RegexParser::parseBase() {
   } else if (c == '|' || c == ')' || c == '*' || c == '+' || c == '?' || c == '\0') {
     return makeNode(RegexNodeType::Epsilon);
   } else {
-    c = get();
+    get();
     auto node = makeNode(RegexNodeType::Literal);
     node->literal = c;
     return node;
@@ -99,15 +121,15 @@ std::shared_ptr<RegexAST> RegexParser::parseRep() {
   auto node = parseBase();
   while (!eof()) {
     char c = peek();
-    if (c == '*' || c == '+' || c == '?') {
+    if (c == '*') {
       get();
-      if (c == '*') {
-        node = makeNode(RegexNodeType::Star, node);
-      } else if (c == '+') {
-        node = makeNode(RegexNodeType::Plus, node);
-      } else {
-        node = makeNode(RegexNodeType::Question, node);
-      }
+      node = makeNode(RegexNodeType::Star, node);
+    } else if (c == '+') {
+      get();
+      node = makeNode(RegexNodeType::Plus, node);
+    } else if (c == '?') {
+      get();
+      node = makeNode(RegexNodeType::Question, node);
     } else {
       break;
     }
@@ -119,8 +141,9 @@ std::shared_ptr<RegexAST> RegexParser::parseCat() {
   auto left = parseRep();
   while (!eof()) {
     char c = peek();
-    if (c == '|' || c == ')')
+    if (c == '|' || c == ')' || c == '\0') {
       break;
+    }
     auto right = parseRep();
     left = makeNode(RegexNodeType::Concat, left, right);
   }
@@ -138,7 +161,8 @@ std::shared_ptr<RegexAST> RegexParser::parseAlt() {
 
 std::shared_ptr<RegexAST> RegexParser::parse() {
   auto ast = parseAlt();
-  if (!eof())
+  if (!eof()) {
     throw std::runtime_error("Неожиданные символы в конце шаблона");
+  }
   return ast;
 }
