@@ -108,7 +108,6 @@ gtest_discover_tests(TokenSpecReaderTests)
 # Тесты для Preprocessor (файл test/Preprocessor/PreprocessorTest.cpp)
 add_executable(PreprocessorTests
         test/Preprocessor/PreprocessorTest.cpp
-        test/Preprocessor/PreprocessorTest.h
 )
 target_link_libraries(PreprocessorTests PRIVATE PreprocessorLib gtest_main)
 gtest_discover_tests(PreprocessorTests)
