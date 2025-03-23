@@ -24,18 +24,23 @@ add_library(RegexLib
         Lexer/Regex/RegexParser.cpp
         Lexer/Regex/RegexParser.h
         Lexer/Regex/RegexAST.h
+        Lexer/Regex/IRegexParser.h
 )
 
 # Библиотека для построителя NFA (NFABuilder)
 add_library(NFALib
         Lexer/NFA/NFABuilder.cpp
         Lexer/NFA/NFABuilder.h
+        Lexer/NFA/NFA.h
+        Lexer/NFA/INFABuilder.h
 )
 
 # Библиотека для конечных автоматов (DFA)
 add_library(DFALib
-        Lexer/DFA/DFA.cpp
+        Lexer/DFA/DFABuilder.cpp
         Lexer/DFA/DFA.h
+        Lexer/DFA/IDFABuilder.h
+        Lexer/DFA/DFABuiler.h
 )
 
 # Библиотека для модуля чтения (TwoBufferReader)
@@ -126,7 +131,7 @@ gtest_discover_tests(NFABuilderTests)
 
 # Тесты для DFA (файл test/Lexer/DFA/DFATest.cpp)
 add_executable(DFATests
-        test/Lexer/DFA/DFATest.cpp
+        test/Lexer/DFA/DFABuilderTest.cpp
 )
 target_link_libraries(DFATests PRIVATE DFALib NFALib RegexLib gtest_main)
 gtest_discover_tests(DFATests)
