@@ -1,16 +1,19 @@
 #pragma once
 #include <vector>
-#include "../NFA/NFABuilder.h"
 
+/**
+ * @brief Состояние детерминированного конечного автомата (DFA).
+ */
 struct DfaState {
     int transitions[256];
     bool isAccept;
     int tokenIndex;
 };
 
+/**
+ * @brief Структура детерминированного конечного автомата (DFA).
+ */
 struct DFA {
     std::vector<DfaState> states;
     int startState;
 };
-
-DFA subsetConstruction(const NFA &nfa);
