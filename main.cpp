@@ -106,19 +106,13 @@ int main(int argc, char *argv[])
   DfaLexer lexer(dfa, specs, reader, &symTable);
 
   while (true) {
-    Token t = lexer.getNextToken();
-    if (t.type == TokenType::END_OF_FILE) {
-      std::cout << "EOF" << std::endl;
-      break;
-    }
-    if (t.type == TokenType::UNKNOWN) {
-      std::cout << "[UNKNOWN] '" << t.lexeme << "' at line " << t.line
-                << ", col " << t.column << std::endl;
-    } else {
-      std::cout << "[TOKEN " << (int)t.type << "] '"
-                << t.lexeme << "' at line " << t.line
-                << ", col " << t.column << std::endl;
-    }
+    Token tok = lexer.getNextToken();
+    if (tok.type == "END_OF_FILE") break;
+
+    std::cout << "Type: " << tok.type
+              << ", Lexeme: '" << tok.lexeme
+              << "', Line: " << tok.line
+              << ", Col: " << tok.column << "\n";
   }
 
   if(std::remove(tempFile.c_str()) != 0) {

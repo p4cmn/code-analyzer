@@ -30,7 +30,6 @@ public:
     Token getNextToken() override;
 
 private:
-    [[nodiscard]] TokenType mapTokenNameToType(const std::string &name) const;
     const DFA &m_dfa;
     const std::vector<TokenSpec> &m_tokenSpecs;
     IReader &m_reader;

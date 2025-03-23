@@ -8,30 +8,12 @@ DfaLexer::DfaLexer(const DFA &dfa,
           m_tokenSpecs(tokenSpecs),
           m_reader(reader),
           m_symbolTable(symbolTable)
-{
-}
-
-TokenType DfaLexer::mapTokenNameToType(const std::string &name) const
-{
-  if (name == "KEYWORD")    return TokenType::KEYWORD;
-  if (name == "IDENT")      return TokenType::IDENTIFIER;
-  if (name == "NUMBER")     return TokenType::NUMBER;
-  if (name == "STRING")     return TokenType::STRING_LITERAL;
-  if (name == "CHAR")       return TokenType::CHAR_LITERAL;
-  if (name == "OP")         return TokenType::OPERATOR;
-  if (name == "SEPARATOR")  return TokenType::SEPARATOR;
-  if (name == "WHITESPACE") return TokenType::UNKNOWN;
-  return TokenType::UNKNOWN;
-}
+{}
 
 Token DfaLexer::getNextToken()
 {
   if (m_reader.isEOF()) {
-    Token eofTok;
-    eofTok.type = TokenType::END_OF_FILE;
-    eofTok.line = m_reader.getLine();
-    eofTok.column = m_reader.getColumn();
-    return eofTok;
+    return {"END_OF_FILE", "", m_reader.getLine(), m_reader.getColumn()};
   }
 
   int startLine = m_reader.getLine();
@@ -61,18 +43,9 @@ Token DfaLexer::getNextToken()
   if (lastAcceptState == -1) {
     char bad = m_reader.getChar();
     if (bad == '\0' && m_reader.isEOF()) {
-      Token eofTok;
-      eofTok.type = TokenType::END_OF_FILE;
-      eofTok.line = startLine;
-      eofTok.column = startCol;
-      return eofTok;
+      return {"END_OF_FILE", "", startLine, startCol};
     }
-    Token unk;
-    unk.type = TokenType::UNKNOWN;
-    unk.lexeme = std::string(1, bad);
-    unk.line = startLine;
-    unk.column = startCol;
-    return unk;
+    return {"UNKNOWN", std::string(1, bad), startLine, startCol};
   }
 
   const auto &spec = m_tokenSpecs[lastAcceptIndex];
@@ -81,11 +54,11 @@ Token DfaLexer::getNextToken()
   }
 
   Token tok;
-  tok.type = mapTokenNameToType(spec.name);
+  tok.type = spec.name;
   tok.lexeme = lexeme;
   tok.line = startLine;
   tok.column = startCol;
-  if (tok.type == TokenType::IDENTIFIER && m_symbolTable) {
+  if (tok.type == "IDENT" && m_symbolTable) {
     tok.symbolId = m_symbolTable->addSymbol(lexeme);
   }
   return tok;
