@@ -1,54 +1,46 @@
 #include "DfaLexer.h"
-#include <iostream>
-#include <cctype>
 
 DfaLexer::DfaLexer(const DFA &dfa,
                    const std::vector<TokenSpec> &tokenSpecs,
                    IReader &reader,
                    ISymbolTable *symbolTable)
-        : m_dfa(dfa), m_tokenSpecs(tokenSpecs), m_reader(reader), m_symbolTable(symbolTable)
-{}
+        : m_dfa(dfa),
+          m_tokenSpecs(tokenSpecs),
+          m_reader(reader),
+          m_symbolTable(symbolTable)
+{
+}
 
-TokenType DfaLexer::mapTokenNameToType(const std::string &name) {
-  if (name == "KEYWORD")   return TokenType::KEYWORD;
-  if (name == "IDENT")     return TokenType::IDENTIFIER;
-  if (name == "NUMBER")    return TokenType::NUMBER;
-  if (name == "STRING")    return TokenType::STRING_LITERAL;
-  if (name == "LBRACE")    return TokenType::SEPARATOR;    // или сделайте отдельный TokenType для '{'
-  if (name == "RBRACE")    return TokenType::SEPARATOR;    // или свой тип
-  if (name == "LPAREN")    return TokenType::SEPARATOR;
-  if (name == "RPAREN")    return TokenType::SEPARATOR;
-  if (name == "SEMICOLON") return TokenType::SEPARATOR;
-  if (name == "COMMA")     return TokenType::SEPARATOR;
-  if (name == "OP")        return TokenType::OPERATOR;
-
-  // Если правило называется WHITESPACE с ignore=true,
-  // мы его пропустим (не вернём наружу), но если дошли сюда –
-  // пусть будет UNKNOWN (или можно вернуть SEPARATOR).
+TokenType DfaLexer::mapTokenNameToType(const std::string &name) const
+{
+  if (name == "KEYWORD")    return TokenType::KEYWORD;
+  if (name == "IDENT")      return TokenType::IDENTIFIER;
+  if (name == "NUMBER")     return TokenType::NUMBER;
+  if (name == "STRING")     return TokenType::STRING_LITERAL;
+  if (name == "CHAR")       return TokenType::CHAR_LITERAL;
+  if (name == "OP")         return TokenType::OPERATOR;
+  if (name == "SEPARATOR")  return TokenType::SEPARATOR;
   if (name == "WHITESPACE") return TokenType::UNKNOWN;
-
-  // По умолчанию:
   return TokenType::UNKNOWN;
 }
 
-// -------------------------------
-//  ВАЖНО: Исправленный getNextToken
-// -------------------------------
-Token DfaLexer::getNextToken() {
+Token DfaLexer::getNextToken()
+{
   if (m_reader.isEOF()) {
     Token eofTok;
-    eofTok.type   = TokenType::END_OF_FILE;
-    eofTok.lexeme = "";
-    eofTok.line   = m_reader.getLine();
+    eofTok.type = TokenType::END_OF_FILE;
+    eofTok.line = m_reader.getLine();
     eofTok.column = m_reader.getColumn();
     return eofTok;
   }
-  int startLine   = m_reader.getLine();
-  int startColumn = m_reader.getColumn();
+
+  int startLine = m_reader.getLine();
+  int startCol  = m_reader.getColumn();
   int currentState = m_dfa.startState;
   int lastAcceptState = -1;
-  int lastAcceptTokenIndex = -1;
+  int lastAcceptIndex = -1;
   std::string lexeme;
+
   while (!m_reader.isEOF()) {
     char c = m_reader.peekChar(0);
     if (m_reader.isEOF()) {
@@ -61,36 +53,38 @@ Token DfaLexer::getNextToken() {
     lexeme.push_back(m_reader.getChar());
     currentState = nextState;
     if (m_dfa.states[currentState].isAccept) {
-      lastAcceptState      = currentState;
-      lastAcceptTokenIndex = m_dfa.states[currentState].tokenIndex;
+      lastAcceptState = currentState;
+      lastAcceptIndex = m_dfa.states[currentState].tokenIndex;
     }
   }
+
   if (lastAcceptState == -1) {
-    char badC = m_reader.getChar();
-    if ((badC == '\0' && m_reader.isEOF()) || m_reader.isEOF()) {
+    char bad = m_reader.getChar();
+    if (bad == '\0' && m_reader.isEOF()) {
       Token eofTok;
-      eofTok.type   = TokenType::END_OF_FILE;
-      eofTok.lexeme = "";
-      eofTok.line   = startLine;
-      eofTok.column = startColumn;
+      eofTok.type = TokenType::END_OF_FILE;
+      eofTok.line = startLine;
+      eofTok.column = startCol;
       return eofTok;
     }
-    Token unknownTok;
-    unknownTok.type   = TokenType::UNKNOWN;
-    unknownTok.lexeme = std::string(1, badC);
-    unknownTok.line   = startLine;
-    unknownTok.column = startColumn;
-    return unknownTok;
+    Token unk;
+    unk.type = TokenType::UNKNOWN;
+    unk.lexeme = std::string(1, bad);
+    unk.line = startLine;
+    unk.column = startCol;
+    return unk;
   }
-  const TokenSpec &spec = m_tokenSpecs[lastAcceptTokenIndex];
+
+  const auto &spec = m_tokenSpecs[lastAcceptIndex];
   if (spec.ignore) {
     return getNextToken();
   }
+
   Token tok;
-  tok.type   = mapTokenNameToType(spec.name);
+  tok.type = mapTokenNameToType(spec.name);
   tok.lexeme = lexeme;
-  tok.line   = startLine;
-  tok.column = startColumn;
+  tok.line = startLine;
+  tok.column = startCol;
   if (tok.type == TokenType::IDENTIFIER && m_symbolTable) {
     tok.symbolId = m_symbolTable->addSymbol(lexeme);
   }
