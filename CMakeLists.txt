@@ -63,9 +63,13 @@ add_library(DfaLexerLib
         Lexer/DfaLexer.h
 )
 
-# Основное приложение – не содержит тестовых файлов!
-add_executable(Analiz main.cpp)
-target_link_libraries(Analiz PRIVATE
+# Новая библиотека для grammar reader (GrammarReaderLib) – включает реализацию GrammarReader и LRParser
+add_library(GrammarReaderLib
+        Parser/Reader/GrammarReader.cpp
+        Parser/LRParser.cpp
+)
+target_include_directories(GrammarReaderLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Parser)
+target_link_libraries(GrammarReaderLib PRIVATE
         PreprocessorLib
         TokenSpecLib
         RegexLib
@@ -75,6 +79,10 @@ target_link_libraries(Analiz PRIVATE
         SymbolTableLib
         DfaLexerLib
 )
+
+# Основное приложение – теперь состоит только из main.cpp и использует GrammarReaderLib
+add_executable(Analiz main.cpp)
+target_link_libraries(Analiz PRIVATE GrammarReaderLib)
 
 # Подключаем GoogleTest через FetchContent
 include(FetchContent)
@@ -95,6 +103,7 @@ target_link_libraries(TokenTests PRIVATE gtest_main)
 include(GoogleTest)
 gtest_discover_tests(TokenTests)
 
+# Тесты для таблицы символов (файл test/SymbolTable/SymbolTableTest.cpp)
 add_executable(SymbolTableTests
         test/SymbolTable/SymbolTableTest.cpp
 )
@@ -129,7 +138,7 @@ add_executable(NFABuilderTests
 target_link_libraries(NFABuilderTests PRIVATE NFALib RegexLib gtest_main)
 gtest_discover_tests(NFABuilderTests)
 
-# Тесты для DFA (файл test/Lexer/DFA/DFATest.cpp)
+# Тесты для DFA (файл test/Lexer/DFA/DFABuilderTest.cpp)
 add_executable(DFATests
         test/Lexer/DFA/DFABuilderTest.cpp
 )
@@ -159,3 +168,11 @@ target_link_libraries(DfaLexerTests PRIVATE
         gtest_main
 )
 gtest_discover_tests(DfaLexerTests)
+
+# Тесты для GrammarReader (файл test/Parser/Reader/GrammarReaderTest.cpp)
+# Тесты теперь линкуются с GrammarReaderLib, который содержит реализацию grammar reader
+add_executable(GrammarReaderTests
+        test/Parser/Reader/GrammarReaderTest.cpp
+)
+target_link_libraries(GrammarReaderTests PRIVATE GrammarReaderLib gtest_main)
+gtest_discover_tests(GrammarReaderTests)
