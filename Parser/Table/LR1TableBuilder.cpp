@@ -5,7 +5,6 @@
 #include <sstream>
 
 LRTable LR1TableBuilder::build(const Grammar &grammar) {
-  // Очистка внутренних структур.
   m_states.clear();
   m_stateIndex.clear();
   m_table.action.clear();
