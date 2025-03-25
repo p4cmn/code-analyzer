@@ -4,6 +4,7 @@ project(Analiz)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --- Существующие модули (не меняем, кроме нижней части) ---
 add_library(PreprocessorLib
         Preprocessor/GccPreprocessor.cpp
         Preprocessor/GccPreprocessor.h
@@ -66,10 +67,18 @@ target_include_directories(DfaLexerLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Lexer)
 add_library(GrammarReaderLib
         Parser/Reader/GrammarReader.cpp
         Parser/Reader/IGrammarReader.h
+        # Здесь можно добавить Parser/Reader/Grammar.h, если он не header-only
 )
 target_include_directories(GrammarReaderLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Parser/Reader)
 target_link_libraries(GrammarReaderLib PRIVATE
-        PreprocessorLib TokenSpecLib RegexLib NFALib DFALib ReaderLib SymbolTableLib DfaLexerLib
+        PreprocessorLib
+        TokenSpecLib
+        RegexLib
+        NFALib
+        DFALib
+        ReaderLib
+        SymbolTableLib
+        DfaLexerLib
 )
 
 add_library(LR1TableBuilderLib
@@ -84,11 +93,40 @@ target_include_directories(LR1TableBuilderLib PUBLIC
 )
 target_link_libraries(LR1TableBuilderLib PRIVATE GrammarReaderLib)
 
-add_executable(Analiz
-        main.cpp
+# --- Добавляем НОВЫЙ модуль: ASTLib ---
+add_library(ASTLib
+        Parser/AST/ASTNode.h
+        Parser/AST/IASTBuilder.h
+        Parser/AST/ASTBuilder.h
+        Parser/AST/ASTBuilder.cpp
 )
-target_link_libraries(Analiz PRIVATE GrammarReaderLib LR1TableBuilderLib)
+target_include_directories(ASTLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Parser/AST)
 
+
+add_library(LRParserLib
+        Parser/IParser.h
+        Parser/LRParser.h
+        Parser/LRParser.cpp
+)
+# Подключаем include-директорию
+target_include_directories(LRParserLib PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/Parser/LRParser
+        ${CMAKE_CURRENT_SOURCE_DIR}/Lexer  # Если нужно для ILexer/Token
+)
+# Линкуем зависимости:
+#  - LR1TableBuilderLib (чтобы использовать LRTable, ILR1TableBuilder)
+#  - ASTLib (используем IASTBuilder)
+#  - GrammarReaderLib (используем Grammar)
+#  - (Возможно, DfaLexerLib, если вы используете реальный лексер)
+target_link_libraries(LRParserLib PRIVATE
+        LR1TableBuilderLib
+        ASTLib
+        GrammarReaderLib
+)
+
+# -----------------------------
+# GoogleTest
+# -----------------------------
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -99,6 +137,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
+# --- Существующие тесты ---
 add_executable(TokenTests
         test/Lexer/Token/TokenTest.cpp
 )
@@ -152,7 +191,15 @@ add_executable(DfaLexerTests
         test/Lexer/DfaLexerTest.cpp
 )
 target_link_libraries(DfaLexerTests PRIVATE
-        PreprocessorLib TokenSpecLib RegexLib NFALib DFALib ReaderLib SymbolTableLib DfaLexerLib gtest_main
+        PreprocessorLib
+        TokenSpecLib
+        RegexLib
+        NFALib
+        DFALib
+        ReaderLib
+        SymbolTableLib
+        DfaLexerLib
+        gtest_main
 )
 gtest_discover_tests(DfaLexerTests)
 
@@ -167,3 +214,15 @@ add_executable(LR1TableBuilderTests
 )
 target_link_libraries(LR1TableBuilderTests PRIVATE LR1TableBuilderLib gtest_main)
 gtest_discover_tests(LR1TableBuilderTests)
+
+# --- Добавляем тесты для AST + LRParser ---
+# Допустим, в одном исполняемом файле у вас лежат:
+#   test/Parser/AST/ASTBuilderTest.cpp
+#   test/Parser/LRParserTest.cpp
+add_executable(ASTBuilderTests
+        test/Parser/AST/ASTBuilderTest.cpp
+        test/Parser/LRParserTest.cpp
+)
+# Линкуем ASTLib и LRParserLib (т.к. LRParserTest может использовать класс LRParser)
+target_link_libraries(ASTBuilderTests PRIVATE ASTLib LRParserLib gtest_main)
+gtest_discover_tests(ASTBuilderTests)
